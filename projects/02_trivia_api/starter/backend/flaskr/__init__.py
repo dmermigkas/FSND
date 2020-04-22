@@ -17,19 +17,190 @@ def create_app(test_config=None):
 
   @app.after_request
   def after_request(response):
-    print(type(response.headers))
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
+    return response
 
-  @app.route('/categories')
+  @app.route('/categories', methods=['GET'])
   def get_categories():
-    print('categories')
+    categories = Category.query.all()
+
+    if categories is None:
+        abort(404)
+    else:
+      return jsonify({
+        'success': True,
+        'categories': {category.id :category.type for category in categories}
+      })
+
+  @app.route('/questions', methods=['GET'])
+  def get_questions():
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    questions = Question.query
+    formatted_questions = [q.format() for q in questions.order_by(Question.id).all()]
+
+    categories = Category.query.all()
+    formatted_categories = [category.format() for category in categories]
+
+    if questions is None:
+        abort(404)
+    else:
+      return jsonify({
+        'success': True,
+        'questions': formatted_questions[start:end],
+        'totalQuestions': questions.count(),
+        'categories': {category.id :category.type for category in categories},
+        'currentCategory': formatted_categories[0]
+      })
+
+  @app.route('/questions', methods=['POST'])
+  def post_question():
+    body = request.get_json()
+    print(body.get('searchTerm'))
+    if body.get('searchTerm') is None:
+      try:
+        question = Question(question=body.get('question'), answer=body.get('answer'), category=body.get('category'), difficulty=body.get('difficulty'))
+        question.insert()
+
+        return jsonify({
+          'success': True
+        })
+      except e as Exception:
+        abort(422)
+    else:
+      questions = Question.query.filter(Question.question.contains(body.get('searchTerm')))
+
+      if questions is None:
+        abort(404)
+      else:
+        return jsonify({
+          'success': True,
+          'questions': [q.format() for q in questions.order_by(Question.id).all()],
+          'totalQuestions': questions.count(),
+          'currentCategory': {}
+        })
+  
+  @app.route('/questions/<question_id>', methods=['DELETE'])
+  def delete_question(question_id):
+    
+    question = Question.query.filter(Question.id == question_id).one()
+
+    try:
+      question.delete()
+      return jsonify({
+        'success': True
+      })
+    except e as Exception:
+      abort(404)
+      
+
+  @app.route('/categories/<category_id>/questions', methods=['GET'])
+  def get_questions_by_category(category_id):
+
+    category = Category.query.filter(Category.id == category_id).one()
+
+    questions = Question.query.filter(Question.category == category.id).order_by(Question.id)
+    formatted_questions = [q.format() for q in questions.all()]
+
+    if questions is None:
+        abort(404)
+    else:
+      return jsonify({
+        'success': True,
+        'questions': formatted_questions,
+        'totalQuestions': questions.count(),
+        'currentCategory': category.format()
+      })
+
+  @app.route('/quizzes', methods=['POST'])
+  def post_quiz():
+
+    body = request.get_json()
+    formatted_questions = []
+    
+    if int(body.get('quiz_category')['id']) == 0:
+      questions = Question.query.order_by(Question.id)
+      formatted_questions = [q.format() for q in questions.all()]
+
+      if len(body.get('previous_questions')) > 0:
+        temp = []
+        for q in formatted_questions:
+          if q['id'] not in body.get('previous_questions'):
+            temp.append(q)
+        formatted_questions = temp
+
+      print(len(formatted_questions), 'lennnn1')
+
+      if formatted_questions is None:
+          abort(404)
+      else:
+        return jsonify({
+          'success': True,
+          'question': random.choice(formatted_questions)
+        })
+    else:
+      category = Category.query.filter(Category.id == int(body.get('quiz_category')['id'])).one()
+      print(category)
+
+      questions = Question.query.filter(Question.category == category.id).order_by(Question.id)
+      formatted_questions = [q.format() for q in questions.all()]
+
+      if len(body.get('previous_questions')) > 0:
+        temp = []
+        for q in formatted_questions:
+          if q['id'] not in body.get('previous_questions'):
+            temp.append(q)
+        formatted_questions = temp
+
+      print(formatted_questions, 'lennnn')
+
+      if formatted_questions is None:
+          abort(404)
+      else:
+        return jsonify({
+          'success': True,
+          'question': random.choice(formatted_questions)
+        })
 
   @app.route('/')
   def index():
     return jsonify({
       'test': 'testing'
     })
+
+  @app.errorhandler(400)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 400,
+      'message': 'Bad Request'
+    }), 400
+
+  @app.errorhandler(404)
+  def not_found(error):
+    return jsonify({
+      'success': False,
+      'error': 404,
+      'message': 'Not found'
+    }), 404
+
+  @app.errorhandler(422)
+  def unproccessable(error):
+    return jsonify({
+      'success': False,
+      'error': 422,
+      'message': 'Unprocessable Entity'
+    }), 422
+
+  @app.errorhandler(500)
+  def unproccessable(error):
+    return jsonify({
+      'success': False,
+      'error': 500,
+      'message': 'Internal Server Error'
+    }), 500
   
   # '''
   # @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
@@ -116,6 +287,7 @@ def create_app(test_config=None):
   # Create error handlers for all expected errors 
   # including 404 and 422. 
   # '''
+
   
   return app
 

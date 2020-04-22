@@ -26,6 +26,7 @@ class QuestionView extends Component {
       url: `/questions?page=${this.state.page}`, //TODO: update request URL
       type: "GET",
       success: (result) => {
+        console.log(result)
         this.setState({
           questions: result.questions,
           totalQuestions: result.total_questions,
@@ -120,23 +121,28 @@ class QuestionView extends Component {
   }
 
   render() {
+    console.log(this.state)
     return (
       <div className="question-view">
         <div className="categories-list">
           <h2 onClick={() => {this.getQuestions()}}>Categories</h2>
-          <ul>
-            {Object.keys(this.state.categories).map((id, ) => (
-              <li key={id} onClick={() => {this.getByCategory(id)}}>
-                {this.state.categories[id]}
-                <img className="category" src={`${this.state.categories[id]}.svg`}/>
-              </li>
-            ))}
-          </ul>
+          {
+            this.state.categories && (
+              <ul>
+                {Object.keys(this.state.categories).map((id, type) => (
+                  <li key={id} onClick={() => {this.getByCategory(id)}}>
+                    {this.state.categories[id]}
+                    <img className="category" src={`${this.state.categories[id]}.svg`}/>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
           <Search submitSearch={this.submitSearch}/>
         </div>
         <div className="questions-list">
           <h2>Questions</h2>
-          {this.state.questions.map((q, ind) => (
+          {this.state.questions && this.state.questions.map((q, ind) => (
             <Question
               key={q.id}
               question={q.question}
