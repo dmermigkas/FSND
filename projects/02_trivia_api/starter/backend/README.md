@@ -66,15 +66,6 @@ One note before you delve into your tasks: for each endpoint you are expected to
 8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
 9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
 
-REVIEW_COMMENT
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
-
-Endpoints
-GET '/categories'
-GET ...
-POST ...
-DELETE ...
 
 GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
@@ -87,7 +78,122 @@ GET '/categories'
 '5' : "Entertainment",
 '6' : "Sports"}
 
-```
+GET '/questions'
+- Fetches a dictionary of categories, currentCategory, questions, totalQuestions in which categories are a dictionary of available categories, currentCategory is the current category, questions is a paginated list of dictionaries with pagination 10 questions per page, and totalQuestions is the total amount of questions
+- Request Arguments: page as query parameter. Example /questions?page=1
+- Returns: An object with keys categories, currentCategory, questions, totalQuestions with a format described below
+{
+  "categories": {
+    "1": "Science", 
+    "2": "Art", 
+    "3": "Geography", 
+    "4": "History", 
+    "5": "Entertainment", 
+    "6": "Sports"
+  }, 
+  "currentCategory": {
+    "id": 1, 
+    "type": "Science"
+  }, 
+  "questions": [
+    {
+      "answer": "Apollo 13", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    }, 
+    {
+      "answer": "Tom Cruise", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 4, 
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+  ],
+  totalQuestions: 12
+}
+
+POST '/questions'
+- Inserts a question in the database and associates it with it's matching category
+- Request Arguments: Request body example
+    {
+        "question":"test question",
+        "answer":"test",
+        "difficulty":1,
+        "category":1
+    }
+- Returns: Success true if the request passes, if failed returns a 422 error
+
+POST '/questions'
+- If tha request body contains a "searchTerm" key then it will filter questions by the searchTerm
+- Request Arguments: Request body example
+    {
+        "searchTerm":"test"
+    }
+- Returns: Success json below, if failed returns a 404 error
+{
+  "currentCategory": {}, 
+  "questions": [
+    {
+      "answer": "test", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "test"
+    }
+  ],
+  totalQuestions: 1,
+  success: true
+
+DELETE '/questions/{{questionId}}'
+- Deletes a specific question from the database
+- Request Arguments: Id of the item that is to be deleted. Example '/questions/1'
+- Returns: Success true if the request passes, if failed returns a 404 error
+
+GET '/categories/{{categoryId}}/categories'
+- Gets all questions filtered by a specific category
+- Request Arguments: Id of the category. Example '/categories/1/categories'
+- Returns: Success json below, if failed returns a 404 error
+{
+  "currentCategory": {
+      "id": 1, 
+        "type": "Science"
+  }, 
+  "questions": [
+    {
+      "answer": "test", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "test"
+    }
+  ],
+  totalQuestions: 1,
+  success: true
+
+POST '/quizzes'
+- If a category is provided, it should return a random question within that category. Otherwise it should a random question within all categories. Also if the previous question array is not empty it should return questions that their ids are not in that array
+- Request Arguments: Request body example
+    {
+        "previous_questions":[12],
+        "quiz_category": {
+            "type":"Science",
+            "id":"1"
+        }
+    }
+- Returns: Success json below, if failed returns a 404 error
+{
+  "question": {
+    "answer": "aaa", 
+    "category": 1, 
+    "difficulty": 1, 
+    "id": 31, 
+    "question": "test question"
+  }, 
+  "success": true
+}
+
 
 
 ## Testing
