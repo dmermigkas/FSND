@@ -6,10 +6,6 @@ database_path = os.environ['DATABASE_URL']
 
 db = SQLAlchemy()
 
-'''
-setup_db(app)
-    binds a flask application and a SQLAlchemy service
-'''
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -17,24 +13,29 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
-
-'''
-Person
-Have title and release year
-'''
-class Person(db.Model):  
-  __tablename__ = 'People'
+class Movie(db.Model):  
+  __tablename__ = 'movie'
 
   id = Column(Integer, primary_key=True)
   name = Column(String)
-  catchphrase = Column(String)
+  producer = Column(String)
+  director = Column(String)
+  genres = Column(ARRAY(String))
+  release_date = Column(Date)
 
-  def __init__(self, name, catchphrase=""):
+  def __init__(self, name, producer, director, genres, release_date):
     self.name = name
-    self.catchphrase = catchphrase
+    self.producer = producer
+    self.director = director
+    self.genres = genres
+    self.release_date = release_date
 
   def format(self):
     return {
       'id': self.id,
       'name': self.name,
-      'catchphrase': self.catchphrase}
+      'producer': self.producer,
+      'director': self.director,
+      'genres': self.genres,
+      'release_date': self.release_date
+    }

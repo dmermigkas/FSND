@@ -156,8 +156,11 @@ def create_app(test_config=None):
 
       print(formatted_questions, 'lennnn')
 
-      if formatted_questions is None:
-          abort(404)
+      if len(formatted_questions == 0):
+        return jsonify({
+          'success': True,
+          'question': False
+        })
       else:
         return jsonify({
           'success': True,

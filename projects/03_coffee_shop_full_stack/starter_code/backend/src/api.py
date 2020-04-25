@@ -12,6 +12,7 @@ setup_db(app)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 
 #https://fsndcoffee.eu.auth0.com/authorize?audience=Coffee&response_type=token&client_id=wX2tfu7Z2F3ew0o8SbQKvC0l7mlnFF6K&redirect_uri=http://localhost:5000/results
+# https://fsndcoffee.eu.auth0.com/login?state=g6Fo2SBubEt3ZGkzMC1zWWQ3eDdUZ1R3d2RBcnRTRXJ1LXduZaN0aWTZIGRSb20tLUZqUHVuZW84WUVzWk5EVm9CVTd6WkJWYm9ko2NpZNkgd1gydGZ1N1oyRjNldzBvOFNiUUt2QzBsN21sbkZGNks&client=wX2tfu7Z2F3ew0o8SbQKvC0l7mlnFF6K&protocol=oauth2&audience=Coffee&response_type=token&redirect_uri=http%3A%2F%2Flocalhost%3A8100%2Ftabs%2Fuser-page
 
 '''
 @TODO uncomment the following line to initialize the datbase
@@ -109,7 +110,7 @@ def patch_drinks(jwt, id):
       drink.update()
       return jsonify({
         'success': True,
-        'drinks': drink.long()
+        'drinks': [drink.long()]
       })
     except e as Exception:
       abort(404)
@@ -187,6 +188,14 @@ def not_found(error):
       'error': 400,
       'message': 'Bad Request'
     }), 400
+
+@app.errorhandler(401)
+def not_authorized(error):
+    return jsonify({
+      'success': False,
+      'error': 401,
+      'message': 'Not Authorized'
+    }), 401
 
 @app.errorhandler(404)
 def not_found(error):
